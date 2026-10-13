@@ -1,3 +1,29 @@
+# Current implementation status — 2026-10-13
+
+The MVP scaffold and workflows have now been committed to this repository. See README.md for setup.
+
+Implemented in the source tree:
+- TanStack Start + React/TypeScript app and Cloudflare Vite/Wrangler configuration.
+- GitHub OAuth login with state-cookie validation and opaque, D1-backed sessions.
+- D1 schema/migration for users, sessions, and Souls.
+- Private-by-default Soul create/list/read/update/delete API endpoints with owner-scoped database queries.
+- Validated JSON input, explicit public/unlisted sharing, dashboard/editor, and share page.
+- Unit tests, CI workflow, deploy workflow, and a script that writes an ignored deployment config without committing secrets.
+
+Deployment is intentionally gated by the GitHub Actions repository variable CLOUDFLARE_DEPLOY_ENABLED=true. Required Cloudflare and GitHub OAuth configuration is documented in README.md.
+
+**Verification caveat:** the commit has been pushed, but this assistant could not run npm install/build inside its environment or confirm a successful Actions run/live Cloudflare deployment. Treat CI as pending until the repository's Actions tab reports success. Also inspect existing Enagram repositories under imanbarati and reconcile their exact domain schema before calling this production-ready.
+
+## Current next steps
+
+1. Check the CI workflow run and correct any dependency/type/build errors it reports.
+2. Create the production D1 database and configure GitHub Actions secrets/variables using README.md.
+3. Set the OAuth callback URL exactly to APP_URL + /api/auth/github/callback.
+4. Enable CLOUDFLARE_DEPLOY_ENABLED only after configuration is complete.
+5. Audit authorization, abuse controls, account deletion/export, and schema compatibility before public launch.
+
+---
+
 # HANDOFF — Enagram / Soul Platform on TanStack Start + Cloudflare
 
 **Purpose:** Read this document before coding. It records the goal, constraints, architecture, and next steps. It is a specification, not a claim that the application is already complete.
