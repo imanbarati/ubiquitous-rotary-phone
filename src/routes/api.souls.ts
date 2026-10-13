@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/souls")({
       const id = crypto.randomUUID(), slug = slugify(value.value.title) + "-" + id.slice(0, 8);
       const insert = env.DB.prepare("INSERT INTO souls(id,owner_id,slug,title,description,data_json,visibility) VALUES(?,?,?,?,?,?,?)")
         .bind(id, u.id, slug, value.value.title, value.value.description, JSON.stringify(value.value.data), value.value.visibility);
-      const saved = await runD1Batch([insert, ...sourceSyncStatements(id, value.value.data)]);
+      const saved = await runD1Batch([insert, ...sourceSyncStatements(id, value.value.data, u.id)]);
       if (!saved) return json({ error: "ذخیرهٔ روح انجام نشد." }, 500);
       const row = await env.DB.prepare("SELECT * FROM souls WHERE id=? AND owner_id=?").bind(id, u.id).first<SoulRow>();
       return json({ soul: row ? safeSoul(row) : null }, 201);
