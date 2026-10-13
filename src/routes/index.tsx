@@ -1,22 +1,83 @@
-import {createFileRoute} from "@tanstack/react-router";
-import {useCallback,useEffect,useState,type FormEvent} from "react";
-import type {SoulInput,Visibility} from "../lib/domain";
-type User={id:number;githubId:number;username:string;avatarUrl:string|null};
-type Soul={id:string;slug:string;title:string;description:string;data:Record<string,unknown>;visibility:Visibility;createdAt:string;updatedAt:string};
-export const Route=createFileRoute("/")({component:Home});
-function Home(){
- const [user,setUser]=useState<User|null>(null),[souls,setSouls]=useState<Soul[]>([]),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[editing,setEditing]=useState<string|null>(null),[title,setTitle]=useState(""),[description,setDescription]=useState(""),[dataText,setDataText]=useState("{\n  \n}"),[visibility,setVisibility]=useState<Visibility>("private");
- const load=useCallback(async()=>{setLoading(true);try{const mr=await fetch("/api/me"),m=await mr.json() as {user?:User|null;error?:string};if(!mr.ok)throw new Error(m.error||"Could not load account.");setUser(m.user??null);if(m.user){const sr=await fetch("/api/souls"),s=await sr.json() as {souls?:Soul[];error?:string};if(!sr.ok)throw new Error(s.error||"Could not load Souls.");setSouls(s.souls??[]);}else setSouls([]);}catch(e){setError(e instanceof Error?e.message:"Server connection failed.");}finally{setLoading(false);}},[]);
- useEffect(()=>{void load();},[load]);
- useEffect(()=>{const q=new URLSearchParams(window.location.search).get("auth");if(q){setError(({invalid_state:"Sign-in expired. Retry.",cancelled:"GitHub sign-in cancelled.",configuration:"GitHub OAuth is not configured.",token_exchange:"GitHub sign-in failed.",profile:"Could not read GitHub profile.",storage:"Session storage failed.",server:"Sign-in failed."} as Record<string,string>)[q]||"Sign-in did not complete.");window.history.replaceState({},"",window.location.pathname);}},[]);
- function reset(){setEditing(null);setTitle("");setDescription("");setDataText("{\n  \n}");setVisibility("private");}
- function edit(s:Soul){setEditing(s.id);setTitle(s.title);setDescription(s.description);setDataText(JSON.stringify(s.data,null,2));setVisibility(s.visibility);window.scrollTo({top:0,behavior:"smooth"});}
- async function save(e:FormEvent){e.preventDefault();setError("");setNotice("");let data:Record<string,unknown>;try{const p:unknown=JSON.parse(dataText);if(!p||typeof p!=="object"||Array.isArray(p))throw new Error("Soul data must be a JSON object.");data=p as Record<string,unknown>;}catch(e){setError(e instanceof Error?e.message:"Invalid JSON.");return;}const payload:SoulInput={title,description,data,visibility};setSaving(true);try{const r=await fetch(editing?"/api/souls/"+encodeURIComponent(editing):"/api/souls",{method:editing?"PUT":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)}),v=await r.json() as {soul?:Soul;error?:string};if(!r.ok||!v.soul)throw new Error(v.error||"Could not save.");setSouls(old=>[v.soul!,...old.filter(x=>x.id!==v.soul!.id)]);setNotice("Soul saved.");reset();}catch(e){setError(e instanceof Error?e.message:"Save failed.");}finally{setSaving(false);}}
- async function remove(s:Soul){if(!window.confirm("Delete “"+s.title+"”?"))return;const r=await fetch("/api/souls/"+encodeURIComponent(s.id),{method:"DELETE"}),v=await r.json() as {error?:string};if(!r.ok){setError(v.error||"Delete failed.");return;}setSouls(old=>old.filter(x=>x.id!==s.id));if(editing===s.id)reset();setNotice("Soul deleted.");}
- async function share(s:Soul){const url=window.location.origin+"/s/"+encodeURIComponent(s.slug);try{await navigator.clipboard.writeText(url);setNotice("Share link copied.");}catch{setNotice("Share link: "+url);}}
- return <main className="shell"><header className="top"><a className="brand" href="/"><b>e✳</b> enagram<span>.</span></a><div>{user?<span className="user">{user.avatarUrl&&<img src={user.avatarUrl} alt=""/>}{user.username}<button onClick={async()=>{await fetch("/api/auth/logout",{method:"POST"});setUser(null);setSouls([]);reset();}}>Sign out</button></span>:<a className="button ghost" href="/api/auth/github">Sign in ↗</a>}</div></header>
- <section className="hero"><small>✳ &nbsp; A CANVAS FOR THE INNER WORLD</small><div className="orb" aria-hidden="true"><i/><i/><i/><b>e</b></div><h1>Every soul has<br/><em>a shape of its own.</em></h1><p>Create, map, and keep your Enagram Souls in one thoughtful space. Your work stays private until you choose to share it.</p><div className="steps">01 — CREATE <span>·</span> 02 — EXPLORE <span>·</span> 03 — SHARE ON YOUR TERMS</div></section>
- {(error||notice)&&<div className={error?"message error":"message"}>{error||notice}<button onClick={()=>{setError("");setNotice("");}}>×</button></div>}
- {loading?<p className="loading">Preparing your workspace…</p>:!user?<section className="signin panel"><div className="symbol">✳</div><div><small>YOUR SPACE, YOUR RULES</small><h2>Start with a private canvas.</h2><p>Sign in with GitHub to save Souls in your protected workspace. Nothing is published without your choice.</p></div><a href="/api/auth/github" className="button primary">Continue with GitHub →</a></section>:<section className="workspace"><div className="heading"><div><small>YOUR PERSONAL ARCHIVE</small><h2>{souls.length?"Your Souls":"Make the first mark."}</h2></div><span>{String(souls.length).padStart(2,"0")} SOULS</span></div><div className="columns"><form className="panel editor" onSubmit={save}><small>{editing?"02 — EDIT YOUR SOUL":"01 — CREATE A SOUL"}</small><h3>{editing?"Edit your Soul":"Give it a name."}</h3><label>Name<input required maxLength={100} value={title} onChange={e=>setTitle(e.target.value)} placeholder="The Quiet Architect"/></label><label>Description<textarea maxLength={500} rows={2} value={description} onChange={e=>setDescription(e.target.value)} placeholder="A few words about this Soul…"/></label><label>Soul data <span>JSON · 24 KB max</span><textarea className="code" rows={7} value={dataText} onChange={e=>setDataText(e.target.value)} spellCheck={false}/></label><label>Visibility<select value={visibility} onChange={e=>setVisibility(e.target.value as Visibility)}><option value="private">Private — only you</option><option value="unlisted">Unlisted — link only</option><option value="public">Public — shareable</option></select></label><p className="privacy">◈ &nbsp; Private by default. Shared links work only for unlisted/public Souls.</p><div className="actions"><button className="button primary" disabled={saving}>{saving?"Saving…":editing?"Save changes":"Create Soul"} →</button>{editing&&<button type="button" className="button ghost" onClick={reset}>Cancel</button>}</div></form><div className="list">{souls.length===0?<div className="panel empty"><div className="big-e">e</div><small>A BLANK PAGE IS A BEGINNING</small><h3>Your archive is waiting.</h3><p>Your first Soul will be saved to your Cloudflare D1 database.</p></div>:souls.map((s,i)=><article className="panel card" key={s.id}><div className="cardtop"><small>{String(i+1).padStart(2,"0")}</small><span className={"tag "+s.visibility}>{s.visibility}</span></div><h3>{s.title}</h3><p>{s.description||"No description yet."}</p><footer>Updated {new Date(s.updatedAt).toLocaleDateString()} </footer><div className="actions"><button className="button ghost" onClick={()=>edit(s)}>Edit</button>{s.visibility!=="private"&&<button className="button ghost" onClick={()=>void share(s)}>Copy link</button>}<button className="button danger" onClick={()=>void remove(s)}>Delete</button></div></article>)}<p className="storage">Only your account can read private Souls. Soul contents are never stored in this public GitHub repository.</p></div></div></section>}
- <footer className="foot"><b>enagram<span>.</span></b><span>Built for reflection, not exposure.</span><span>© {new Date().getFullYear()}</span></footer></main>;
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+
+type CatalogueSoul = { slug: string; title: string; description: string; categories: string[]; language: string; sourceCount: number; updatedAt: string };
+const categoryLabels: Record<string, string> = { writings: "نوشته‌ها", interviews: "مصاحبه‌ها", technical: "یادداشت‌های فنی", audio: "صوت و گفتار", other: "سایر منابع" };
+function normalizeSearch(value: string) {
+  return value.toLocaleLowerCase("fa").replace(/[يى]/g, "ی").replace(/ك/g, "ک")
+    .replace(/[\u200c\u200e\u200f\u202a-\u202e]/g, " ").replace(/\s+/g, " ").trim();
+}
+export const Route = createFileRoute("/")({ component: Catalogue });
+function Catalogue() {
+  const [souls, setSouls] = useState<CatalogueSoul[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("all");
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/public/souls").then(async response => {
+      const payload = await response.json() as { souls?: CatalogueSoul[]; error?: string };
+      if (!response.ok) throw new Error(payload.error || "بارگذاری فهرست انجام نشد.");
+      if (active) setSouls(payload.souls || []);
+    }).catch(reason => {
+      if (active) setError(reason instanceof Error ? reason.message : "ارتباط با سرور برقرار نشد.");
+    }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  const filtered = useMemo(() => {
+    const term = normalizeSearch(query);
+    return souls.filter(soul => {
+      const textMatch = !term || normalizeSearch([soul.title, soul.description, ...soul.categories.map(c => categoryLabels[c] || c)].join(" ")).includes(term);
+      return textMatch && (category === "all" || soul.categories.includes(category));
+    });
+  }, [souls, query, category]);
+
+  return <main className="shell catalogue" dir="rtl">
+    <header className="top">
+      <a className="brand" href="/"><b>e✳</b> انگرام<span>.</span></a>
+      <nav className="catalog-nav" aria-label="ناوبری اصلی">
+        <a className="button ghost" href="/dashboard">فضای شخصی</a>
+        <a className="button primary" href="/api/auth/github">ورود با گیت‌هاب ↗</a>
+      </nav>
+    </header>
+    <section className="catalog-hero">
+      <div className="catalog-orbit" aria-hidden="true"><span>e</span></div>
+      <small>آرشیوی برای تجربه‌ها، اندیشه‌ها و صداها</small>
+      <h1>هر روح، روایتی<br/><em>از خودش دارد.</em></h1>
+      <p>انگرام‌ها بازتابی از نوشته‌ها و خاطرات ثبت‌شده‌اند؛ نه جایگزین شخص واقعی. در این فهرست فقط منابعی دیده می‌شوند که صریحاً برای انتشار عمومی علامت‌گذاری شده‌اند.</p>
+      <div className="catalog-count">{souls.length.toLocaleString("fa-IR")} روح منتشرشده <span>·</span> منابع با اجازهٔ روشن</div>
+    </section>
+    <section className="catalog-section" aria-labelledby="catalog-title">
+      <div className="catalog-heading">
+        <div><small>کتابخانهٔ عمومی</small><h2 id="catalog-title">کاتالوگ روح‌ها</h2></div>
+        <label className="catalog-search"><span className="sr-only">جست‌وجو در منابع عمومی</span><span aria-hidden="true">⌕</span>
+          <input value={query} onChange={event => setQuery(event.target.value)} placeholder="جست‌وجوی نام، توضیح یا دسته…" />
+          {query && <button type="button" onClick={() => setQuery("")} aria-label="پاک‌کردن جست‌وجو">×</button>}
+        </label>
+      </div>
+      <div className="catalog-filters" aria-label="فیلتر دسته‌ها">
+        <button className={category === "all" ? "active" : ""} onClick={() => setCategory("all")}>همهٔ دسته‌ها</button>
+        {Object.entries(categoryLabels).map(([key, label]) => <button key={key} className={category === key ? "active" : ""} onClick={() => setCategory(key)}>{label}</button>)}
+      </div>
+      {error && <div className="message error" role="alert">{error}<button onClick={() => window.location.reload()}>تلاش دوباره</button></div>}
+      {loading ? <p className="catalog-status" role="status">در حال بارگذاری فهرست عمومی…</p> :
+        filtered.length === 0 ? <div className="catalog-empty panel"><div className="big-e">e</div>
+          <h3>{souls.length === 0 ? "هنوز روحی برای نمایش منتشر نشده است." : "نتیجه‌ای پیدا نشد."}</h3>
+          <p>{souls.length === 0 ? "وقتی منبعی با برچسب انتشار عمومی ثبت شود، اینجا ظاهر خواهد شد. دادهٔ خصوصی هرگز برای پرکردن فهرست نمایش داده نمی‌شود." : "عبارت جست‌وجو یا دستهٔ انتخاب‌شده را تغییر دهید."}</p>
+          {souls.length === 0 && <a className="button ghost" href="/dashboard">ساخت یا مدیریت روح</a>}
+        </div> : <div className="catalog-grid">{filtered.map((soul, index) =>
+          <article className="catalog-card panel" key={soul.slug}>
+            <div className="catalog-card-top"><span className="catalog-index">{String(index + 1).padStart(2, "0")}</span><span className="catalog-public">منتشرشده</span></div>
+            <div className="catalog-card-mark" aria-hidden="true">e</div><h3>{soul.title}</h3><p>{soul.description || "منبع عمومی ثبت‌شده برای این روح."}</p>
+            <div className="catalog-tags">{soul.categories.map(item => <span key={item}>{categoryLabels[item] || item}</span>)}</div>
+            <footer><span>{soul.sourceCount.toLocaleString("fa-IR")} منبع عمومی</span><span>{soul.language === "both" ? "فارسی و انگلیسی" : soul.language === "en" ? "انگلیسی" : "فارسی"}</span></footer>
+            <a className="button primary catalog-open" href={"/s/" + encodeURIComponent(soul.slug)}>مشاهدهٔ منابع عمومی ←</a>
+          </article>
+        )}</div>}
+    </section>
+    <footer className="foot"><b>انگرام<span>.</span></b><span>بازتابی از سوابق ثبت‌شده، نه خودِ شخص.</span><span>© {new Date().getFullYear()}</span></footer>
+  </main>;
 }

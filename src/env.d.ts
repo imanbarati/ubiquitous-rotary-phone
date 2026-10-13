@@ -4,7 +4,11 @@ interface EnagramD1Statement {
   all<T = Record<string, unknown>>(): Promise<{ results: T[]; success: boolean }>;
   run(): Promise<{ success: boolean; meta?: unknown }>;
 }
-interface EnagramD1Database { prepare(query: string): EnagramD1Statement; }
+interface EnagramD1Result { success: boolean; meta?: unknown }
+interface EnagramD1Database {
+  prepare(query: string): EnagramD1Statement;
+  batch(statements: EnagramD1Statement[]): Promise<EnagramD1Result[]>;
+}
 interface EnagramCloudflareEnv {
   DB: EnagramD1Database;
   APP_URL: string;
