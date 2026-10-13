@@ -26,6 +26,8 @@ Needs Node.js 22+.
 
 ## Production D1 and automated deployment
 
+For a click-by-click guide showing exactly where to find each GitHub secret and variable, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
 The deployment workflow automatically checks for a D1 database named `enagram-platform-db`; it creates the database if missing and reuses it if it already exists. It passes the UUID to later steps for Wrangler config generation, migrations, and deployment. No database UUID secret and no manual database creation are needed.
 
 The CI workflow tests and builds pushes to `main` and pull requests. Production deployment is disabled until the repository variable `CLOUDFLARE_DEPLOY_ENABLED` is set to the exact value `true`.
