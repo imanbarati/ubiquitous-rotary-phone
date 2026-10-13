@@ -8,10 +8,12 @@ A TanStack Start / React / TypeScript app for creating and sharing Enagram “So
 - Private-by-default Soul creation, listing, editing and deletion.
 - Server-side owner checks on every private endpoint.
 - Validated declarative JSON data (24 KiB maximum); never executes user code.
-- Optional unlisted/public links at `/s/:slug`; setting visibility back to private revokes the link.
+- A Persian RTL public catalogue at `/` that lists only source records tagged exactly `publication: "public"`.
+- A private Soul dashboard at `/dashboard`; public routes query normalized source rows only and never serialize private Soul metadata.
+- Public source links at `/s/:slug`; removing the exact public tag revokes catalogue and source-page access.
 - D1 migrations, unit tests, GitHub CI and an opt-in Cloudflare deploy workflow.
 
-Soul content is stored in D1, never in this public source repository. Only hashed random session tokens are stored, and GitHub access tokens are not persisted. This initial schema is deliberately flexible until the Claude-generated Enagram repositories under https://github.com/imanbarati have been inventoried.
+Soul content is stored in D1, never in this public source repository. Public catalog visibility comes from each source record's exact `publication: "public"` tag; all missing or unknown values are private. Source data lives in the Soul JSON `sources` array and is mirrored transactionally into `soul_sources` for public queries. Only hashed random session tokens are stored, and GitHub access tokens are not persisted. This initial schema is deliberately flexible until the Claude-generated Enagram repositories under https://github.com/imanbarati have been inventoried.
 
 ## Local development
 
@@ -48,11 +50,12 @@ Set the OAuth App's callback URL to `APP_URL + /api/auth/github/callback` exactl
 
 ## Routes and architecture
 
-- `/` dashboard and Soul editor
+- `/` public Persian catalogue (only explicitly public sources)
+- `/dashboard` private archive and Soul editor
 - `/api/auth/github`, `/api/auth/github/callback` OAuth login
 - `/api/auth/logout`, `/api/me` session
 - `/api/souls`, `/api/souls/:id` private CRUD
-- `/api/public/souls/:slug`, `/s/:slug` explicitly shared content
+- `/api/public/souls`, `/api/public/souls/:slug`, `/s/:slug` public-source catalogue and detail pages (source tag required)
 
 `wrangler.jsonc` contains placeholders; `scripts/configure-cloudflare.mjs` updates the generated `dist/server/wrangler.json` with deployment environment values after the build. This keeps Wrangler pointed at the actual bundled Worker entry point and static assets. Workers for Platforms is a separately priced future upgrade, not part of the Free-tier MVP.
 
