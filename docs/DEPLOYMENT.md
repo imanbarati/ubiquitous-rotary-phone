@@ -104,7 +104,7 @@ When deployment is enabled, the action:
 1. Builds and typechecks the app.
 2. Calls `scripts/ensure-d1.mjs`, which finds `enagram-platform-db` in the selected account or creates it if it is missing.
 3. Passes the resulting database UUID to the later job steps without committing it.
-4. Generates an ignored temporary Wrangler config.
+4. Updates the generated `dist/server/wrangler.json` with deployment values. The generated config includes the bundled server entry point and assets paths; do not replace it with a root-level custom config for deployment.
 5. Applies the SQL migrations.
 6. Sets the GitHub OAuth client secret as a Worker secret.
 7. Deploys the Worker.
