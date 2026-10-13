@@ -1,150 +1,189 @@
-# Current implementation status — 2026-10-13
+# راهنمای تحویل پروژه — پلتفرم فارسی انگرام و فهرست «روح‌ها»
 
-## Automatic database provisioning
+> **برای هر دستیار یا توسعه‌دهنده‌ای که این فایل را می‌خواند:** پیش از تغییر کد، این سند و فایل‌های مرتبط را بخوان. اطلاعات ثبت‌شده را دوباره از مالک نپرس. بعد از هر مرحله، وضعیت واقعی تست و استقرار را ثبت کن؛ موفقیت را حدس نزن.
 
-The GitHub Actions deploy workflow now calls `scripts/ensure-d1.mjs` before Wrangler configuration. It uses the Cloudflare API to find `enagram-platform-db` by name, creates it if missing, and passes the returned UUID to subsequent steps through `GITHUB_ENV`. Repeated deploys reuse the same database. `CLOUDFLARE_D1_DATABASE_ID` is no longer a required GitHub secret.
-
-The detailed, click-by-click setup guide is in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md); it links to the exact Cloudflare and GitHub pages for each required value.
-
-Required setup remains: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `ENAGRAM_GITHUB_CLIENT_SECRET`, `APP_URL`, and `ENAGRAM_GITHUB_CLIENT_ID`, plus `CLOUDFLARE_DEPLOY_ENABLED=true`. The API token must include D1 Write, Workers deployment, and D1 migration permissions.
-
-**Verification note:** this change is committed, but the GitHub Actions runner has not yet been observed completing the job. Do not claim a successful live deployment until Actions confirms it.
+**آخرین بازبینی:** ۲۰۲۶-۱۰-۱۳  
+**مخزن برنامه:** https://github.com/imanbarati/ubiquitous-rotary-phone  
+**مخزن منبع انگرام:** https://github.com/imanbarati/my-engram/tree/main/claude-engram  
+**پوشهٔ دادهٔ منبع:** https://github.com/imanbarati/my-engram/tree/main/claude-engram/data  
+**نشانی برنامه:** https://enagram-platform.baratiiman3.workers.dev
 
 ---
 
-# Current implementation status — 2026-10-13
+## ۱. هدف محصول
 
-The MVP scaffold and workflows have now been committed to this repository. See README.md for setup.
+این پروژه پلتفرمی برای نگهداری، مرور و پرسش از «انگرام‌ها» (Engrams) یا «روح‌ها» (Souls) است. هر انگرام بازتابی از نوشته‌ها، مصاحبه‌ها، یادداشت‌های فنی و منابع ثبت‌شده است؛ نه خودِ شخص.
 
-Implemented in the source tree:
-- TanStack Start + React/TypeScript app and Cloudflare Vite/Wrangler configuration.
-- GitHub OAuth login with state-cookie validation and opaque, D1-backed sessions.
-- D1 schema/migration for users, sessions, and Souls.
-- Private-by-default Soul create/list/read/update/delete API endpoints with owner-scoped database queries.
-- Validated JSON input, explicit public/unlisted sharing, dashboard/editor, and share page.
-- Unit tests, CI workflow, deploy workflow, and a script that writes an ignored deployment config without committing secrets.
+محصول باید:
 
-Deployment is intentionally gated by the GitHub Actions repository variable CLOUDFLARE_DEPLOY_ENABLED=true. Required Cloudflare and GitHub OAuth configuration is documented in README.md.
+- از ابتدا **فارسی‌محور** باشد و تجربهٔ کامل راست‌به‌چپ داشته باشد.
+- فهرست عمومی و قابل جست‌وجوی روح‌های منتشرشده را در **صفحهٔ اصلی** نمایش دهد.
+- اجازه دهد دربارهٔ یک روح سؤال پرسیده شود و پاسخ فقط بر اساس منابع مجاز و بازیابی‌شده ارائه شود.
+- فرایند مصاحبهٔ راهنما داشته باشد که از صاحب انگرام سؤال‌ها را یکی‌یکی بپرسد، پاسخ‌ها را برای بازبینی ذخیره کند و هیچ پاسخی را از طرف او نسازد.
+- ایجاد، ویرایش، پیش‌نمایش، نگهداری و حذف روح‌های کاربر را با کنترل دسترسی سمت سرور فراهم کند.
+- روی Cloudflare Workers و D1 با اولویت نسخهٔ رایگان اجرا شود. سرویس پولی یا مدل ابری نباید پیش‌نیاز استفادهٔ پایه باشد.
 
-**Verification caveat:** the commit has been pushed, but this assistant could not run npm install/build inside its environment or confirm a successful Actions run/live Cloudflare deployment. Treat CI as pending until the repository's Actions tab reports success. Also inspect existing Enagram repositories under imanbarati and reconcile their exact domain schema before calling this production-ready.
+## ۲. وضعیت فعلی و موارد تأییدشده
 
-## Current next steps
+- برنامه با TanStack Start، React و TypeScript ساخته شده است.
+- ورود با GitHub OAuth، نشست‌های مبتنی بر D1، عملیات پایهٔ CRUD روح‌ها، اعتبارسنجی داده و پیوندهای اشتراک‌گذاری در کد موجودند.
+- GitHub Actions نصب وابستگی‌ها، تست، ساخت، آماده‌سازی D1، اجرای migration و استقرار را خودکار می‌کند.
+- استقرار نسخهٔ 6da6ff91fd7a2d3a3f1bd84970e8238c49c46668 در اجرای [GitHub Actions شمارهٔ 38385224642](https://github.com/imanbarati/ubiquitous-rotary-phone/actions/runs/38385224642) موفق گزارش شده است؛ تست‌ها و ساخت نیز در اجرای [38385224577](https://github.com/imanbarati/ubiquitous-rotary-phone/actions/runs/38385224577) موفق بوده‌اند.
+- کد ورود OAuth برای تولید نشانی بازگشت از دامنه‌ای که درخواست را دریافت می‌کند اصلاح شده است. در تنظیمات OAuth App گیت‌هاب، نشانی بازگشت باید دقیقاً با این مورد تطبیق داشته باشد:
 
-1. Check the CI workflow run and correct any dependency/type/build errors it reports.
-2. Create the production D1 database and configure GitHub Actions secrets/variables using README.md.
-3. Set the OAuth callback URL exactly to APP_URL + /api/auth/github/callback.
-4. Enable CLOUDFLARE_DEPLOY_ENABLED only after configuration is complete.
-5. Audit authorization, abuse controls, account deletion/export, and schema compatibility before public launch.
+  https://enagram-platform.baratiiman3.workers.dev/api/auth/github/callback
 
----
+- موفقیت استقرار، به معنی تکمیل فهرست عمومی، پرسش‌وپاسخ مبتنی بر منابع یا مصاحبهٔ راهنما نیست. این قابلیت‌ها نیازمند پیاده‌سازی و تست جداگانه‌اند.
+- کلیدها و مقادیر محرمانه فقط در GitHub Secrets/Variables و تنظیمات سرور نگهداری شوند؛ هیچ توکن واقعی را در این مخزن ثبت نکن.
 
-# HANDOFF — Enagram / Soul Platform on TanStack Start + Cloudflare
+## ۳. منبع دادهٔ موجود و وضعیت واقعی آن
 
-**Purpose:** Read this document before coding. It records the goal, constraints, architecture, and next steps. It is a specification, not a claim that the application is already complete.
+ساختار منبعی که باید بررسی و در صورت مجاز بودن وارد برنامه شود:
 
-## Product vision
+https://github.com/imanbarati/my-engram/tree/main/claude-engram/data
 
-Build an independent Enagram platform under [imanbarati](https://github.com/imanbarati), reusing work that Claude previously created in the owner's existing Enagram repositories.
+زیرپوشه‌های فعلی:
 
-Users should be able to create, save, edit, preview, and eventually publish their own “Souls” / Enagram experiences through a simple web interface. Treat “Soul” as the product's content concept; inspect the existing repositories to recover the real schema instead of inventing one.
+- **audio/** — منابع صوتی
+- **interviews/** — مصاحبه‌ها و پاسخ‌های ثبت‌شده
+- **technical/** — یادداشت‌ها و تصمیم‌های فنی
+- **writings/** — نوشته‌ها و نمونه‌های نوشتاری
 
-Technology target: TanStack Start + TypeScript on Cloudflare Workers, with a Free-tier-first MVP and private-by-default storage.
+**وضعیت بررسی‌شده:** در شاخهٔ main فعلی، این چهار پوشه فقط فایل‌های خالی .gitkeep دارند؛ محتوای واقعی برای واردکردن دیده نشد. در نتیجه تعداد یا محتوای جعلی نساز. تا زمانی که رکورد مجاز وجود ندارد، پیام خالی‌بودن فهرست و راهنمای افزودن/واردکردن محتوا را به فارسی نشان بده.
 
-Reference templates:
-- https://workers.new/templates/multiplayer-globe-template
-- https://workers.new/templates/llm-chat-app-template
-- https://workers.new/templates/workers-for-platforms-template
+README و HANDOFF داخل claude-engram پروژه را به‌عنوان یک شخصیت دیجیتال خصوصی، مبتنی بر منابع و دارای قابلیت استناد معرفی می‌کنند. داده‌های شخصی را صرفاً به این دلیل که مخزن منبع از طریق GitHub قابل مشاهده است، به سایت عمومی کپی نکن.
 
-Use these as inspiration, not as a requirement to copy them. The three URLs were originally pasted together; they are separate intended links.
+### قواعد واردسازی
 
-## Important constraints
+1. یک اسکریپت واردسازی تکرارپذیر طراحی کن؛ اجرای چندباره نباید رکورد تکراری بسازد.
+2. ساختار چهار دسته را حفظ کن. برای هر منبع فرادادهٔ معنادار ثبت کن: شناسهٔ پایدار، عنوان، خلاصه، دسته، زبان، مسیر/شناسهٔ منبع، تاریخ در صورت وجود، وضعیت انتشار و زمان آخرین به‌روزرسانی.
+3. فایل‌های متنی پشتیبانی‌شده مثل Markdown و TXT را می‌توان برای ایندکس جست‌وجو پردازش کرد. فایل صوتی بدون فرایند مشخص پیاده‌سازی گفتار به متن، محتوای متنی محسوب نمی‌شود؛ هیچ فایل صوتی خصوصی را عمومی نکن.
+4. **پیش‌فرض همهٔ منابع واردشده خصوصی است.** فقط رکوردهایی وارد فهرست عمومی شوند که مالک صریحاً برای انتشار تأیید کرده یا با فرادادهٔ معتبر و بررسی‌شده علامت انتشار گرفته‌اند. نبودن فیلد انتشار یعنی خصوصی.
+5. منبع اصلی را بدون اجازه تغییر نده و آن را خودکار به مخزن عمومی برنامه کپی نکن. متن خصوصی نباید در لاگ‌ها، ایندکس عمومی، فرانت‌اند یا تاریخچهٔ commit افشا شود.
+6. برای هر پاسخ، شناسهٔ منبع و بخش‌های دقیق بازیابی‌شده را نگه دار تا امکان ارجاع و بررسی وجود داشته باشد.
 
-1. **Free-tier first.** Do not introduce paid Cloudflare products, paid APIs, or mandatory subscriptions without clearly identifying the cost.
-2. **Workers for Platforms is paid.** Do not promise that per-user isolated Worker deployments work on the ordinary Workers Free plan. The MVP must run on ordinary Workers and leave a provider boundary for a future Workers for Platforms upgrade.
-3. **Never run user-supplied JavaScript** inside the app Worker. Store validated, declarative Enagram/Soul data and render it safely. Arbitrary code execution requires a separate isolation and security design.
-4. **Privacy by default.** Never commit user content, OAuth tokens, GitHub tokens, Cloudflare API tokens, or personal data to this public repository. No GitHub token in browser code or VITE_ variables.
-5. GitHub is the source-control platform. If GitHub is also used for user-data storage, store that data in a **private repository**, using a server-side GitHub App or fine-grained token with minimum permissions. Do not use public issues/comments as a database.
-6. Never claim code was pushed, tests passed, or deployment completed unless verified.
+## ۴. زبان فارسی و رابط راست‌به‌چپ
 
-## Architecture for the Free-tier MVP
+فارسی باید زبان پیش‌فرض و کامل محصول باشد، نه ترجمهٔ چند عنوان.
 
-- TanStack Start + TypeScript; use the currently supported Cloudflare adapter/config and verify package versions against the current official guide.
-- Responsive dashboard with create/edit/preview/delete flows.
-- Server-side validation and authorization on every read/write.
-- Initial Soul fields: stable ID/slug, owner ID, title, optional description, schema-versioned Enagram data, visibility (private by default), and timestamps. Recover/align the schema with existing repos first.
-- Suggested default storage: Cloudflare D1 for records and ownership checks. Keep storage behind an interface. Add optional private-GitHub JSON storage only where specifically needed.
-- Publish the MVP as data rendered by the same app, e.g. `/s/:slug`. This is not a separate Worker per Soul.
-- Future paid extension: implement a DeploymentProvider for Workers for Platforms dispatch namespaces and per-user Workers. Do not make it required to run the MVP.
+- سند HTML از lang="fa" و dir="rtl" استفاده کند.
+- منوها، دکمه‌ها، فرم‌ها، پیام‌های اعتبارسنجی، وضعیت‌های خالی، خطاها، پنجره‌ها، اعلان‌ها و محتوای صفحهٔ اصلی به فارسی طبیعی باشند.
+- چیدمان RTL واقعی باشد؛ فقط راست‌چین‌کردن متن کافی نیست.
+- جست‌وجوی فارسی «ی/ي»، «ک/ك»، فاصله‌ها و نیم‌فاصله را تا حد معقول نرمال‌سازی کند؛ جست‌وجوی انگلیسی هم برای منابع دوزبانه پشتیبانی شود.
+- تاریخ و عدد فارسی به‌شکل منسجم نمایش داده شوند؛ شناسه‌ها، کدها و پیوندها بدون خرابی قابل کپی بمانند.
+- عنوان‌ها، توضیحات و metadata صفحات فهرست و جزئیات نیز فارسی باشند.
+- انگلیسی می‌تواند زبان ثانویه باشد، اما نبود ترجمهٔ انگلیسی نباید تجربهٔ فارسی را ناقص کند.
 
-## Existing work and repository strategy
+## ۵. صفحهٔ اصلی: فهرست روح‌های نگهداری‌شده
 
-Target account: https://github.com/imanbarati
+صفحهٔ اصلی مسیر / باید درگاه اصلی کشف انگرام‌ها و فهرست عمومی باشد. فضای مدیریت شخصی به مسیر جداگانه‌ای مانند /dashboard منتقل شود تا فهرست عمومی با اطلاعات خصوصی کاربر مخلوط نشود.
 
-The owner says Claude has already created Enagram-related repositories. **Inventory them before rebuilding.** Read their README files, package manifests, schema/data models, licenses, and recent commits. Reuse relevant code and preserve history. Do not assume repository names or overwrite existing work.
+### اجزای صفحهٔ اصلی
 
-This repository should become the dedicated Enagram platform repository. Keep:
-- this `HANDOFF.md`
-- `README.md` with clean-checkout setup and deployment instructions
-- TanStack Start application, tests, and schema
-- `wrangler.jsonc` with placeholder bindings only
-- `.dev.vars.example` without secrets
-- `.gitignore` excluding local env files and build output
-- GitHub Actions for install, lint/typecheck, tests, and build
-- concise privacy/security documentation
+- معرفی کوتاه فارسی دربارهٔ انگرام و اینکه پاسخ‌ها از منابع ثبت‌شده می‌آیند.
+- جست‌وجوی سراسری در عنوان‌ها، توضیحات، برچسب‌ها و محتوای مجاز.
+- کارت‌های روح/انگرام شامل عنوان، خلاصه، دسته‌ها، زبان و دکمهٔ «پرسیدن سؤال».
+- فیلتر دسته‌ها: نوشته‌ها، مصاحبه‌ها، منابع فنی و صوتی؛ بعداً دسته‌های دیگر نیز قابل افزودن باشند.
+- صفحهٔ جزئیات هر روح با توضیح منابع مورد استفاده، وضعیت انتشار و ارجاع‌ها.
+- وضعیت‌های بارگذاری، خطا و «هنوز روحی برای نمایش منتشر نشده است» به فارسی.
+- ورود به حساب، ایجاد انگرام و رفتن به مجموعهٔ خصوصی کاربر بدون افشای دادهٔ خصوصی به بازدیدکننده.
 
-## Build order
+### قانون انتشار فهرست
 
-1. **Inventory existing work first.** Find Enagram-related repositories and report framework, features, license, schemas, recent activity, and reuse candidates.
-2. Recover the Soul/Enagram domain schema and write a compatibility note.
-3. Scaffold a minimal TanStack Start app with TypeScript, tests, lint/typecheck, and Cloudflare config.
-4. Implement secure identity/session handling, then private dashboard CRUD, preview, visibility rules, and data export.
-5. Add D1 migrations and repository/storage interfaces. Add GitHub-private storage only when the owner explicitly selects it.
-6. Add Wrangler local-dev, migration, and deploy instructions. Do not invent account IDs, binding IDs, domains, or secrets.
-7. Add CI. Deployment must require configured secrets and must not expose credentials to untrusted PR code.
-8. Run actual checks, fix failures, and record commands/results. Test cross-user access denial and anonymous access to private Souls.
-9. Deploy only after the owner configures Cloudflare bindings/secrets. Never ask the owner to paste tokens in chat.
+فهرست صفحهٔ اصلی فقط شامل روح‌های عمومی/منتشرشده و رکوردهایی باشد که مالک صریحاً تأیید کرده است. تمام رکوردهای D1 یا همهٔ فایل‌های claude-engram/data را صرفاً برای پرکردن صفحه در معرض عموم قرار نده. فهرست خالی بهتر از افشای محتوای خصوصی است.
 
-## Security and privacy checklist
+## ۶. قابلیت «از انگرام سؤال بپرس»
 
-- [ ] New Souls are private by default; public/unlisted sharing is opt-in and revocable.
-- [ ] Every read/write checks the authenticated session and authorization server-side.
-- [ ] Never trust a client-supplied ownerId.
-- [ ] Validate schema, size, slug uniqueness, field types, and visibility on the server.
-- [ ] Safely escape/render user content; no eval, new Function, or user JavaScript.
-- [ ] No secrets in the repo, browser bundles, logs, or error responses.
-- [ ] GitHub content storage (if enabled) uses a private repo and minimum token permissions.
-- [ ] Add abuse/rate limits, export, and deletion paths.
-- [ ] Tests cover cross-user denial and private content not being served anonymously.
+هر روح یا انگرامِ قابل دسترس می‌تواند صفحه یا پنل پرسش‌وپاسخ داشته باشد.
 
-## UX direction
+- کاربر سؤال را به فارسی یا انگلیسی وارد کند؛ پاسخ به همان زبان داده شود مگر آنکه زبان دیگری درخواست شود.
+- پیش از تولید پاسخ، فقط بخش‌هایی از منابع بازیابی شوند که کاربر مجاز به دیدن آن‌هاست.
+- پاسخ متکی به متن بازیابی‌شده باشد و ارجاع‌های قابل کلیک به منبع یا بخش‌های استفاده‌شده ارائه کند.
+- اگر اسناد پاسخ کافی ندارند، به‌جای حدس‌زدن بگو: «در منابع ثبت‌شده، پاسخ قابل اتکایی برای این سؤال پیدا نکردم.»
+- انگرام نباید ادعا کند خودِ شخص واقعی است یا از طرف او قطعیت بسازد. در رابط توضیح بده که این بازتاب هوش مصنوعی بر اساس سوابق ثبت‌شده است.
+- پرسش‌های حساس فقط به منابع مجاز دسترسی داشته باشند. جست‌وجو باید فیلتر مجوز را پیش از انتخاب بخش‌های قابل استناد اعمال کند.
+- راهکار رایگان و retrieval-first را ترجیح بده. هر مدل ابری اختیاری باشد و هزینه و انتقال داده به سرویس بیرونی را آشکار کند؛ کلید API هرگز در مرورگر قرار نگیرد.
 
-Build a polished, minimal interface—not a raw admin template. The template references suggest optional ideas:
-- Multiplayer Globe: live collaborative visualization only if it suits the Enagram experience.
-- LLM Chat: conversational creation only if useful; any model provider must be optional and disclose possible cost.
-- Workers for Platforms: future isolation/deployment layer, not a Free-tier dependency.
+## ۷. مصاحبه و پرسش‌های راهنما
 
-Do not add a globe, chat UI, or AI provider merely because a template was linked. Prioritize a reliable creation and privacy workflow.
+علاوه بر پرسیدن سؤال از انگرام، صاحب محتوا باید بتواند انگرام را با پاسخ‌های خودش تکمیل کند. این جریان از ایدهٔ scripts/interview.py در پروژهٔ منبع الهام می‌گیرد.
 
-## Acceptance criteria
+- سیستم در هر نوبت فقط **یک سؤال روشن** بپرسد؛ موضوع‌ها می‌توانند ارزش‌ها، تجربه‌های زندگی، کار، تصمیم‌های فنی و موضوع آزاد باشند.
+- پاسخ‌دهنده بتواند پاسخ دهد، ویرایش کند، رد کند، به سؤال قبلی برگردد یا مصاحبه را تمام کند.
+- پاسخ خام صاحب محتوا به‌عنوان پاسخ ثبت‌شده حفظ شود؛ خلاصهٔ هوش مصنوعی جای متن اصلی را نگیرد.
+- جلسه به‌صورت پیش‌نویس ذخیره شود و فقط پس از بازبینی مالک به کتابخانه یا ایندکس افزوده شود.
+- زبان سؤال‌ها با زبان انتخابی یا پاسخ کاربر هماهنگ باشد؛ فارسی طبیعی در اولویت است.
+- پیش از ذخیره، دربارهٔ رمزها، کلیدها، شماره‌های هویتی و سایر داده‌های حساس هشدار بده؛ اطلاعات حساس ناخواسته را به لاگ یا خروجی عمومی منتقل نکن.
+- مصاحبه به‌خودی‌خود موجب انتشار عمومی نشود.
 
-- A developer or AI can follow README instructions from a clean checkout.
-- The app runs locally and builds for Cloudflare Workers.
-- Users can create, edit, preview, and delete Souls.
-- Private Souls cannot be read by another user or anonymous visitors.
-- Visibility and sharing behave as documented.
-- Inputs are validated; arbitrary user code is never executed.
-- No credentials are committed.
-- CI passes, and exact check results are recorded.
-- Docs clearly distinguish Free-tier features from paid Workers for Platforms features.
+## ۸. معماری، داده و مسیرها
 
-## Official references
+معماری TanStack Start + React + TypeScript + Cloudflare Workers + D1 را حفظ کن، مگر اینکه دلیل فنی مستند و تست‌شده‌ای برای تغییر وجود داشته باشد.
 
-- Workers for Platforms overview: https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/
-- Workers for Platforms architecture: https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/how-workers-for-platforms-works/
-- Workers for Platforms getting started: https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/get-started/
-- Workers limits: https://developers.cloudflare.com/workers/platform/limits/
-- TanStack Start on Cloudflare: https://developers.cloudflare.com/workers/framework-guides/web-apps/tanstack-start/
+مسیرهای پیشنهادی؛ ابتدا با route tree موجود تطبیق داده شوند:
 
-## First instruction to the next AI
+- **/** — فهرست عمومی فارسی روح‌های منتشرشده
+- **/s/:slug** — جزئیات یا اشتراک‌گذاری یک روح مطابق سیاست انتشار
+- **/ask/:slug** — پرسش از انگرام منتخب با بازیابی منبع و ارجاع
+- **/interview** — ساخت و ادامهٔ مصاحبهٔ خصوصی
+- **/dashboard** — کتابخانهٔ شخصی و مدیریت روح‌های کاربر
+- **/api/public/** — فقط اطلاعاتی که صریحاً منتشر شده‌اند
+- مسیرهای موجود **/api/auth/**، **/api/me** و **/api/souls** باید بدون شکستن قرارداد فعلی حفظ شوند.
 
-Start by inspecting existing Enagram-related repositories under `imanbarati`. Summarize their schema, framework, features, license, and reuse candidates, then implement the smallest secure MVP using the existing domain model. Preserve work, keep user data private, and do not deploy until the owner configures the Cloudflare environment.
+پیش از افزودن جدول‌ها، migrations/0001_init.sql و مدل فعلی را بررسی کن. مدل داده باید بتواند منبع، دسته، زبان، وضعیت انتشار، مجوز مالک و پیوند به سند/بخش اصلی را ثبت کند. اگر جدول جدید لازم است، migration تازه همراه با تست بنویس و migration قبلی را بی‌دلیل بازنویسی نکن.
+
+## ۹. امنیت، حریم خصوصی و صداقت پاسخ‌ها
+
+- روح‌های جدید خصوصی باشند؛ اشتراک عمومی فقط با انتخاب روشن مالک فعال شود و امکان لغوش وجود داشته باشد.
+- هر endpoint خصوصی، عملیات نوشتن و نتیجهٔ جست‌وجو باید مجوز را سمت سرور بررسی کند؛ به ownerId یا visibility ارسالی از مرورگر اعتماد نکن.
+- جست‌وجوی عمومی، API عمومی، SSR، metadata، ایندکس، فایل‌های استاتیک و لاگ‌ها نباید متن خصوصی را افشا کنند.
+- دادهٔ کاربر هرگز به کد قابل اجرا تبدیل نشود؛ از eval، new Function یا اجرای JavaScript کاربر استفاده نکن.
+- برای ورود، پرسش‌وپاسخ، API و ذخیره‌سازی محدودیت نرخ و اندازه بگذار؛ خطاها نباید راز یا محتوای خصوصی را برگردانند.
+- امکان خروجی‌گرفتن و حذف دادهٔ کاربر را در برنامهٔ کاری نگه دار.
+- هر پاسخ خودکار را از خود شخص متمایز کن و وقتی مدرک وجود ندارد، «نمی‌دانم» را مجاز و ترجیحی بدان.
+
+## ۱۰. ترتیب اجرای کار
+
+1. این فایل، README.md، migrations، routeها و مدل دادهٔ فعلی را بخوان.
+2. ساختار منبع my-engram/claude-engram و حساسیت هر فایل را بررسی کن؛ هیچ محتوای شخصی را خودکار منتشر نکن. در زمان این بازبینی، پوشهٔ data خالی از سوابق واقعی بود.
+3. فهرست صفحهٔ اصلی را فارسی‌محور کن و مدیریت خصوصی را به مسیر جدا منتقل کن؛ حالت فهرست خالی را کامل بساز.
+4. مدل و migrationهای لازم برای کاتالوگ عمومی و منابع/بخش‌ها را همراه با تست طراحی کن.
+5. واردسازی امن، تکرارپذیر و مبتنی بر تأیید انتشار را اضافه کن.
+6. جست‌وجو و صفحهٔ جزئیات روح‌ها را با فیلتر مجوز پیاده‌سازی کن.
+7. پرسش‌وپاسخ بازیابی‌محور را همراه با ارجاع منبع و پاسخ «نمی‌دانم» اضافه کن.
+8. مصاحبهٔ راهنما را با ذخیرهٔ پیش‌نویس، بازبینی و رضایت برای انتشار بساز.
+9. تست دسترسی ناشناس، دسترسی کاربر دیگر، دادهٔ خصوصی در ایندکس، لغو انتشار، ارجاع پاسخ و نبود منبع را اضافه کن.
+10. npm test و npm run build را اجرا کن؛ نتیجهٔ واقعی را ثبت کن. سپس استقرار GitHub Actions را بررسی و رفتار آنلاین را در مرورگر آزمایش کن.
+
+## ۱۱. معیارهای پذیرش
+
+- [ ] رابط اصلی فارسی طبیعی، کامل و RTL باشد.
+- [ ] صفحهٔ اصلی فهرست قابل جست‌وجوی انگرام‌های عمومی را نمایش دهد؛ در نبود داده، محتوای جعلی نشان ندهد.
+- [ ] هر روح کارت، دسته‌بندی و صفحهٔ جزئیات داشته باشد.
+- [ ] پرسش از انگرام فقط از منابع مجاز استفاده کند، ارجاع بدهد و در نبود سند پاسخ نسازد.
+- [ ] مصاحبه سؤال‌ها را یکی‌یکی بپرسد و پاسخ اصلی را برای بازبینی ذخیره کند.
+- [ ] محتوای واردشده خصوصی بماند مگر مالک آن را برای انتشار تأیید کند.
+- [ ] خصوصی‌بودن داده با درخواست مستقیم API، جست‌وجو، SSR یا شناسهٔ حدس‌زده‌شده دور زده نشود.
+- [ ] پاسخ‌های انگرام ادعای هویت شخص واقعی نکنند.
+- [ ] داده و کلید محرمانه در مخزن عمومی یا مرورگر ثبت نشود.
+- [ ] تست‌ها و ساخت موفق باشند و وضعیت استقرار مستند شود.
+
+## ۱۲. سؤال‌هایی که باید از مالک پرسیده شوند
+
+تا زمان پاسخ، با گزینهٔ امن جلو برو: **هیچ منبعی بدون تأیید صریح عمومی نشود.**
+
+1. **نمایش کاتالوگ:** هر انگرام یک کارت مستقل داشته باشد یا هر فایل منبع نیز کارت مستقل داشته باشد؟ پیش‌فرض: یک کارت برای هر انگرام، با فیلتر بر اساس دستهٔ منابع.
+2. **چه چیزی عمومی است؟** فقط رکوردهایی که دستی تأیید می‌کنی یا فایل‌هایی که برچسب انتشار صریح دارند؟ پیش‌فرض: تأیید صریح مالک و خصوصی‌بودن بقیه.
+3. **مدل پاسخ‌گویی:** پاسخ فقط با جست‌وجو و ارجاع به سند ارائه شود یا تولید متن با یک مدل اختیاری هم لازم است؟ پیش‌فرض: بازیابی‌محور با ارجاع و بدون هزینهٔ اجباری.
+
+این سؤال‌ها نباید جلوی ساخت رابط، مدل داده، حالت خالی، مصاحبهٔ پیش‌نویس یا تست‌های حریم خصوصی را بگیرند.
+
+## منابع مرجع
+
+- کد و دادهٔ انگرام: https://github.com/imanbarati/my-engram/tree/main/claude-engram
+- پوشهٔ داده: https://github.com/imanbarati/my-engram/tree/main/claude-engram/data
+- راهنمای منبع: https://github.com/imanbarati/my-engram/blob/main/claude-engram/README.md
+- استقرار فعلی: https://enagram-platform.baratiiman3.workers.dev
+- اجرای موفق استقرار: https://github.com/imanbarati/ubiquitous-rotary-phone/actions/runs/38385224642
+- TanStack Start روی Cloudflare: https://developers.cloudflare.com/workers/framework-guides/web-apps/tanstack-start/
+- محدودیت‌های Workers: https://developers.cloudflare.com/workers/platform/limits/
