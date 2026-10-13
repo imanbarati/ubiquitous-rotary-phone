@@ -8,8 +8,8 @@ interface EnagramD1Database { prepare(query: string): EnagramD1Statement; }
 interface EnagramCloudflareEnv {
   DB: EnagramD1Database;
   APP_URL: string;
-  GITHUB_CLIENT_ID: string;
-  GITHUB_CLIENT_SECRET?: string;
+  ENAGRAM_GITHUB_CLIENT_ID: string;
+  ENAGRAM_GITHUB_CLIENT_SECRET?: string;
 }
 declare module "cloudflare:workers" {
   export const env: EnagramCloudflareEnv;
