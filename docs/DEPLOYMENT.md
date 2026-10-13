@@ -4,15 +4,15 @@ This is a click-by-click guide for the GitHub Actions deployment. **Never paste 
 
 ## 1. Choose the production URL first
 
-For a no-custom-domain, Free-tier first deployment, use the Worker's \`workers.dev\` URL:
+For a no-custom-domain, Free-tier first deployment, use the Worker's `workers.dev` URL:
 
-\`\`\`text
+```text
 https://enagram-platform.<YOUR_ACCOUNT_SUBDOMAIN>.workers.dev
-\`\`\`
+```
 
-The Worker name is \`enagram-platform\` (from \`wrangler.jsonc\`). Find or enable your account's \`workers.dev\` subdomain in the [Cloudflare dashboard](https://dash.cloudflare.com/) under **Workers & Pages** / account settings. The official [workers.dev guide](https://developers.cloudflare.com/workers/configuration/routing/workers-dev/) explains the hostname format. Replace the placeholder with the account subdomain you see in Cloudflare.
+The Worker name is `enagram-platform` (from `wrangler.jsonc`). Find or enable your account's `workers.dev` subdomain in the [Cloudflare dashboard](https://dash.cloudflare.com/) under **Workers & Pages** / account settings. The official [workers.dev guide](https://developers.cloudflare.com/workers/configuration/routing/workers-dev/) explains the hostname format. Replace the placeholder with the account subdomain you see in Cloudflare.
 
-If using a custom domain instead, it must be a domain you control and configured for Cloudflare Workers. Set \`APP_URL\` to the exact HTTPS origin users will visit, without a trailing path (for example, \`https://souls.example.com\`).
+If using a custom domain instead, it must be a domain you control and configured for Cloudflare Workers. Set `APP_URL` to the exact HTTPS origin users will visit, without a trailing path (for example, `https://souls.example.com`).
 
 You need this URL before configuring GitHub OAuth because the callback URL depends on it.
 
@@ -23,19 +23,19 @@ Open [GitHub Developer Settings](https://github.com/settings/developers), then c
 Fill in:
 
 - **Application name:** Enagram (or your preferred display name).
-- **Homepage URL:** your chosen \`APP_URL\`.
-- **Authorization callback URL:** \`APP_URL/api/auth/github/callback\` exactly.
+- **Homepage URL:** your chosen `APP_URL`.
+- **Authorization callback URL:** `APP_URL/api/auth/github/callback` exactly.
 
-For the \`workers.dev\` example above, the callback would be:
+For the `workers.dev` example above, the callback would be:
 
-\`\`\`text
+```text
 https://enagram-platform.<YOUR_ACCOUNT_SUBDOMAIN>.workers.dev/api/auth/github/callback
-\`\`\`
+```
 
 After registering the app:
 
-- **\`GITHUB_CLIENT_ID\`** — shown on the OAuth App's details page.
-- **\`GITHUB_CLIENT_SECRET\`** — on the same page, select **Generate a new client secret**. GitHub treats this as confidential; store it directly in GitHub Secrets.
+- **`ENAGRAM_GITHUB_CLIENT_ID`** — shown on the OAuth App's details page.
+- **`ENAGRAM_GITHUB_CLIENT_SECRET`** — on the same page, select **Generate a new client secret**. GitHub treats this as confidential; store it directly in GitHub Secrets.
 
 Do not use your GitHub personal access token here. This project uses an OAuth App client ID and client secret.
 
@@ -47,7 +47,7 @@ Official guide: [Creating an OAuth app](https://docs.github.com/en/apps/oauth-ap
 2. Go to **Workers & Pages** and look for **Account Details → Account ID**. Use **Copy**.
 3. Alternatively, use Cloudflare's [official instructions for finding the Account ID](https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/).
 
-Add this value as the GitHub secret \`CLOUDFLARE_ACCOUNT_ID\`. It is an account identifier, not an API token.
+Add this value as the GitHub secret `CLOUDFLARE_ACCOUNT_ID`. It is an account identifier, not an API token.
 
 ## 4. Create the Cloudflare API token
 
@@ -60,7 +60,7 @@ Add this value as the GitHub secret \`CLOUDFLARE_ACCOUNT_ID\`. It is an account 
    Keep resource scope limited to the one Cloudflare account wherever the UI allows.
 5. Create the token and copy it immediately; Cloudflare shows the token value only at creation time.
 
-Add the copied value as the GitHub secret \`CLOUDFLARE_API_TOKEN\`.
+Add the copied value as the GitHub secret `CLOUDFLARE_API_TOKEN`.
 
 References: [Cloudflare's GitHub Actions deployment guide](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/), [API token permissions](https://developers.cloudflare.com/fundamentals/api/reference/permissions/), [D1 create API permission](https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/create/).
 
@@ -74,17 +74,17 @@ Under **Repository secrets**, click **New repository secret** for each:
 
 | Secret name | Where to get it |
 |---|---|
-| \`CLOUDFLARE_API_TOKEN\` | Token you create in Cloudflare step 4. |
-| \`CLOUDFLARE_ACCOUNT_ID\` | Cloudflare Workers & Pages → Account Details, step 3. |
-| \`GITHUB_CLIENT_SECRET\` | Your GitHub OAuth App → Generate a new client secret, step 2. |
+| `CLOUDFLARE_API_TOKEN` | Token you create in Cloudflare step 4. |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Workers & Pages → Account Details, step 3. |
+| `ENAGRAM_GITHUB_CLIENT_SECRET` | Your GitHub OAuth App → Generate a new client secret, step 2. |
 
 Then click the **Variables** tab on the same settings page and create these repository variables:
 
 | Variable name | Value |
 |---|---|
-| \`APP_URL\` | The exact HTTPS origin chosen in step 1, without a path or trailing slash. |
-| \`GITHUB_CLIENT_ID\` | Client ID shown on the GitHub OAuth App details page, step 2. |
-| \`CLOUDFLARE_DEPLOY_ENABLED\` | Enter \`true\` only when all the values above are ready. |
+| `APP_URL` | The exact HTTPS origin chosen in step 1, without a path or trailing slash. |
+| `ENAGRAM_GITHUB_CLIENT_ID` | Client ID shown on the GitHub OAuth App details page, step 2. |
+| `CLOUDFLARE_DEPLOY_ENABLED` | Enter `true` only when all the values above are ready. |
 
 GitHub documentation: [repository secrets](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets) and [repository variables](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-variables).
 
@@ -95,7 +95,7 @@ You do **not** need to create the D1 database manually or add a database ID secr
 When deployment is enabled, the action:
 
 1. Builds and typechecks the app.
-2. Calls \`scripts/ensure-d1.mjs\`, which finds \`enagram-platform-db\` in the selected account or creates it if it is missing.
+2. Calls `scripts/ensure-d1.mjs`, which finds `enagram-platform-db` in the selected account or creates it if it is missing.
 3. Passes the resulting database UUID to the later job steps without committing it.
 4. Generates an ignored temporary Wrangler config.
 5. Applies the SQL migrations.
@@ -104,12 +104,12 @@ When deployment is enabled, the action:
 
 ## 7. First deployment checklist
 
-- [ ] A \`workers.dev\` subdomain is enabled, or a custom production domain is ready.
-- [ ] GitHub OAuth Homepage URL and callback URL exactly match the selected \`APP_URL\`.
+- [ ] A `workers.dev` subdomain is enabled, or a custom production domain is ready.
+- [ ] GitHub OAuth Homepage URL and callback URL exactly match the selected `APP_URL`.
 - [ ] The three repository secrets are configured.
 - [ ] The three repository variables are configured.
 - [ ] Cloudflare token is scoped to the correct account and includes Workers Scripts Write + D1 Write.
-- [ ] Set \`CLOUDFLARE_DEPLOY_ENABLED\` to \`true\`.
+- [ ] Set `CLOUDFLARE_DEPLOY_ENABLED` to `true`.
 - [ ] Open [GitHub Actions runs](https://github.com/imanbarati/ubiquitous-rotary-phone/actions) and inspect the deployment result.
 
-If a run fails, open that workflow run and inspect the first failed step. Common errors are an incorrect API token scope, mistyped Account ID, mismatched OAuth callback URL, or an \`APP_URL\` that is not HTTPS.
+If a run fails, open that workflow run and inspect the first failed step. Common errors are an incorrect API token scope, mistyped Account ID, mismatched OAuth callback URL, or an `APP_URL` that is not HTTPS.
