@@ -10,6 +10,7 @@ export const Route = createFileRoute("/en/s/$slug")({
     return page;
   },
   head: ({ params, loaderData }) => {
+    if (!loaderData) return { meta: [{ name: "robots", content: "noindex,nofollow" }] };
     const canonical = absoluteUrl("/en/s/" + encodeURIComponent(params.slug));
     const alternates = loaderData.language === "both" ? [
       { rel: "alternate", hrefLang: "en", href: canonical },
