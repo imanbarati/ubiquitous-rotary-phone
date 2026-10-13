@@ -54,6 +54,6 @@ Set the OAuth App's callback URL to `APP_URL + /api/auth/github/callback` exactl
 - `/api/souls`, `/api/souls/:id` private CRUD
 - `/api/public/souls/:slug`, `/s/:slug` explicitly shared content
 
-`wrangler.jsonc` contains placeholders; `scripts/configure-cloudflare.mjs` generates ignored `.wrangler.deploy.jsonc` from deployment environment values. Workers for Platforms is a separately priced future upgrade, not part of the Free-tier MVP.
+`wrangler.jsonc` contains placeholders; `scripts/configure-cloudflare.mjs` updates the generated `dist/server/wrangler.json` with deployment environment values after the build. This keeps Wrangler pointed at the actual bundled Worker entry point and static assets. Workers for Platforms is a separately priced future upgrade, not part of the Free-tier MVP.
 
 This is an initial MVP, not a completed security audit. Before broad public launch, reconcile the existing Enagram domain model, add rate limiting, account deletion/export, and API integration tests.
