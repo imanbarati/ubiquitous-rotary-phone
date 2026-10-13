@@ -9,7 +9,7 @@ function publicSources(soul: Soul): SourceHint[] {
   return Array.isArray(soul.data.sources) ? (soul.data.sources as SourceHint[]).filter(source =>
     source && source.publication === "public" && typeof source.id === "string" && typeof source.title === "string") : [];
 }
-export const Route = createFileRoute("/dashboard")({ component: Dashboard });
+export const Route = createFileRoute("/dashboard")({ head: () => ({ meta: [{ title: "فضای شخصی | انگرام" }, { name: "robots", content: "noindex,nofollow" }] }), component: Dashboard });
 function Dashboard() {
   const [user, setUser] = useState<User | null>(null), [souls, setSouls] = useState<Soul[]>([]);
   const [loading, setLoading] = useState(true), [saving, setSaving] = useState(false);

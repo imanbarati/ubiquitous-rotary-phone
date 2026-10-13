@@ -8,9 +8,11 @@ A TanStack Start / React / TypeScript app for creating and sharing Enagram “So
 - Private-by-default Soul creation, listing, editing and deletion.
 - Server-side owner checks on every private endpoint.
 - Validated declarative JSON data (24 KiB maximum); never executes user code.
-- A Persian RTL public catalogue at `/` that lists only source records tagged exactly `publication: "public"`.
+- A server-rendered Persian public catalogue at `/` and an English catalogue at `/en`; each filters sources by the selected language and the explicit public tag.
 - A private Soul dashboard at `/dashboard`; public routes query normalized source rows only and never serialize private Soul metadata.
-- Public source links at `/s/:slug`; removing the exact public tag revokes catalogue and source-page access.
+- Server-rendered, indexable source pages at `/s/:slug` and `/en/s/:slug`; canonical URLs and `hreflang` alternates are emitted where the source is marked bilingual.
+- Dynamic `/sitemap.xml` and `/robots.txt`, route-level Open Graph/Twitter metadata, JSON-LD structured data, and an explicit noindex rule for the private dashboard and API responses.
+- Lightweight staggered CSS animations for catalogue cards and source blocks, with keyboard focus states and `prefers-reduced-motion` support.
 - D1 migrations, unit tests, GitHub CI and an opt-in Cloudflare deploy workflow.
 
 Soul content is stored in D1, never in this public source repository. Public catalog visibility comes from each source record's exact `publication: "public"` tag; all missing or unknown values are private. Source data lives in the Soul JSON `sources` array and is mirrored transactionally into `soul_sources` for public queries. Only hashed random session tokens are stored, and GitHub access tokens are not persisted. This initial schema is deliberately flexible until the Claude-generated Enagram repositories under https://github.com/imanbarati have been inventoried.
@@ -50,7 +52,10 @@ Set the OAuth App's callback URL to `APP_URL + /api/auth/github/callback` exactl
 
 ## Routes and architecture
 
-- `/` public Persian catalogue (only explicitly public sources)
+- `/` Persian SSR catalogue (only explicitly public Persian/bilingual sources)
+- `/en` English SSR catalogue (only explicitly public English/bilingual sources)
+- `/s/:slug`, `/en/s/:slug` localized SSR public source pages
+- `/sitemap.xml`, `/robots.txt` crawler discovery/configuration
 - `/dashboard` private archive and Soul editor
 - `/api/auth/github`, `/api/auth/github/callback` OAuth login
 - `/api/auth/logout`, `/api/me` session
@@ -58,5 +63,9 @@ Set the OAuth App's callback URL to `APP_URL + /api/auth/github/callback` exactl
 - `/api/public/souls`, `/api/public/souls/:slug`, `/s/:slug` public-source catalogue and detail pages (source tag required)
 
 `wrangler.jsonc` contains placeholders; `scripts/configure-cloudflare.mjs` updates the generated `dist/server/wrangler.json` with deployment environment values after the build. This keeps Wrangler pointed at the actual bundled Worker entry point and static assets. Workers for Platforms is a separately priced future upgrade, not part of the Free-tier MVP.
+
+## Search indexing notes
+
+The canonical origin is currently `https://enagram-platform.baratiiman3.workers.dev` and is centralized in `src/lib/seo.ts`; update that constant before switching the production hostname. The sitemap is generated from public source rows at request time and never includes private sources. Technical SEO improves crawlability but does not guarantee inclusion/rankings; add the live property to Google Search Console and Bing Webmaster Tools and submit `/sitemap.xml` after deploy. English detail routes are included only for sources whose language is `en` or `both`.
 
 This is an initial MVP, not a completed security audit. Before broad public launch, reconcile the existing Enagram domain model, add rate limiting, account deletion/export, and API integration tests.

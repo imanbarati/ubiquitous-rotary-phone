@@ -28,7 +28,7 @@ export const Route = createFileRoute("/api/public/souls")({
             if (soul.language !== source.language) soul.language = "both";
           }
         }
-        return json({ souls: Array.from(grouped.values()) }, 200, { "X-Robots-Tag": "index, follow" });
+        return json({ souls: Array.from(grouped.values()) }, 200, { "X-Robots-Tag": "noindex, nofollow" });
       } catch {
         return json({ error: "فهرست عمومی فعلاً در دسترس نیست." }, 503, { "X-Robots-Tag": "noindex, nofollow" });
       }
