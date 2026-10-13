@@ -76,14 +76,19 @@ function asStoredSources(data: Record<string, unknown>): SoulSource[] {
       ["fa", "en", "both"].includes(String(s.language)) && (s.publication === "public" || s.publication === "private");
   });
 }
-export function sourceSyncStatements(soulId: string, data: Record<string, unknown>): EnagramD1Statement[] {
-  const statements: EnagramD1Statement[] = [env.DB.prepare("DELETE FROM soul_sources WHERE soul_id=?").bind(soulId)];
+export function sourceSyncStatements(soulId: string, data: Record<string, unknown>, ownerId: number): EnagramD1Statement[] {
+  // Guard every source mutation with the parent Soul's owner check. This prevents a forged PUT
+  // request for another user's Soul ID from replacing or deleting that user's source records.
+  const statements: EnagramD1Statement[] = [
+    env.DB.prepare("DELETE FROM soul_sources WHERE soul_id IN (SELECT id FROM souls WHERE id=? AND owner_id=?)").bind(soulId, ownerId)
+  ];
   for (const source of asStoredSources(data)) {
     const sourceId = soulId + ":" + source.id;
     statements.push(env.DB.prepare(
-      "INSERT INTO soul_sources(source_id,soul_id,source_key,public_slug,title,summary,category,language,content,publication) VALUES(?,?,?,?,?,?,?,?,?,?)"
+      "INSERT INTO soul_sources(source_id,soul_id,source_key,public_slug,title,summary,category,language,content,publication) " +
+      "SELECT ?,?,?,?,?,?,?,?,?,? WHERE EXISTS (SELECT 1 FROM souls WHERE id=? AND owner_id=?)"
     ).bind(sourceId, soulId, source.id, publicSourceSlug(soulId, source.id, source.title),
-      source.title, source.summary, source.category, source.language, source.content, source.publication));
+      source.title, source.summary, source.category, source.language, source.content, source.publication, soulId, ownerId));
   }
   return statements;
 }
