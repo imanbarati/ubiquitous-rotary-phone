@@ -19,7 +19,7 @@ export const Route = createFileRoute("/api/souls/$id")({
       const value = validateSoulInput(body); if (!value.ok) return json({ error: value.error }, 400);
       const update = env.DB.prepare("UPDATE souls SET title=?,description=?,data_json=?,visibility=?,updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=? AND owner_id=?")
         .bind(value.value.title, value.value.description, JSON.stringify(value.value.data), value.value.visibility, params.id, u.id);
-      const saved = await runD1Batch([update, ...sourceSyncStatements(params.id, value.value.data)]);
+      const saved = await runD1Batch([update, ...sourceSyncStatements(params.id, value.value.data, u.id)]);
       if (!saved) {
         const owned = await env.DB.prepare("SELECT id FROM souls WHERE id=? AND owner_id=?").bind(params.id, u.id).first<{ id: string }>();
         return owned ? json({ error: "به‌روزرسانی روح انجام نشد." }, 500) : json({ error: "روح پیدا نشد." }, 404);
