@@ -39,14 +39,14 @@ jobs:
       - name: Configure and validate deployment
         env:
           APP_URL: ${{ vars.APP_URL }}
-          GITHUB_CLIENT_ID: ${{ vars.GITHUB_CLIENT_ID }}
+          ENAGRAM_GITHUB_CLIENT_ID: ${{ vars.ENAGRAM_GITHUB_CLIENT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          GITHUB_CLIENT_SECRET: ${{ secrets.GITHUB_CLIENT_SECRET }}
+          ENAGRAM_GITHUB_CLIENT_SECRET: ${{ secrets.ENAGRAM_GITHUB_CLIENT_SECRET }}
         run: |
           node scripts/configure-cloudflare.mjs
           node --input-type=module -e '
-            const keys = ["CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID", "GITHUB_CLIENT_SECRET"];
+            const keys = ["CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID", "ENAGRAM_GITHUB_CLIENT_SECRET"];
             const missing = keys.filter((key) => !process.env[key] || !process.env[key].trim());
             if (missing.length) {
               console.error("Missing GitHub Actions secrets: " + missing.join(", "));
@@ -64,8 +64,8 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          GITHUB_CLIENT_SECRET: ${{ secrets.GITHUB_CLIENT_SECRET }}
-        run: printf '%s' "$GITHUB_CLIENT_SECRET" | npx wrangler secret put GITHUB_CLIENT_SECRET --name enagram-platform --config .wrangler.deploy.jsonc
+          ENAGRAM_GITHUB_CLIENT_SECRET: ${{ secrets.ENAGRAM_GITHUB_CLIENT_SECRET }}
+        run: printf '%s' "$ENAGRAM_GITHUB_CLIENT_SECRET" | npx wrangler secret put ENAGRAM_GITHUB_CLIENT_SECRET --name enagram-platform --config .wrangler.deploy.jsonc
 
       - name: Deploy Worker
         uses: cloudflare/wrangler-action@v4
