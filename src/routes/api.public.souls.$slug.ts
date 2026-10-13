@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/public/souls/$slug")({
         ).bind(selected.soul_id).all<PublicSourceRow>();
         const sources = result.results.map(toPublicSource);
         return json({ soul: { title: selected.title, description: selected.summary || excerpt(selected.content), data: { sources }, visibility: "public" } },
-          200, { "X-Robots-Tag": "index, follow" });
+          200, { "X-Robots-Tag": "noindex, nofollow" });
       } catch {
         return json({ error: "منبع عمومی فعلاً در دسترس نیست." }, 503, { "X-Robots-Tag": "noindex, nofollow" });
       }
