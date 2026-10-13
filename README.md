@@ -20,7 +20,7 @@ Needs Node.js 22+.
 1. Run `npm install`.
 2. Copy `.dev.vars.example` to `.dev.vars` and add the GitHub OAuth App's client secret. PowerShell: `Copy-Item .dev.vars.example .dev.vars`.
 3. Create an OAuth App at https://github.com/settings/developers with callback `http://localhost:3000/api/auth/github/callback`.
-4. Edit `GITHUB_CLIENT_ID` in `wrangler.jsonc` for local use.
+4. Edit `ENAGRAM_GITHUB_CLIENT_ID` in `wrangler.jsonc` for local use.
 5. Run `npm run db:migrate:local`, then `npm run dev`.
 6. Validate with `npm test` and `npm run build`.
 
@@ -36,12 +36,12 @@ In GitHub **Settings → Secrets and variables → Actions**, add these reposito
 
 - `CLOUDFLARE_API_TOKEN` — least-privilege Cloudflare token with D1 Write (to list/create the database), Workers deployment, and D1 migration permissions.
 - `CLOUDFLARE_ACCOUNT_ID` — Cloudflare account ID.
-- `GITHUB_CLIENT_SECRET` — OAuth App secret.
+- `ENAGRAM_GITHUB_CLIENT_SECRET` — OAuth App secret.
 
 Add these repository **variables**:
 
 - `APP_URL` — production origin including HTTPS, for example `https://enagram.example.com`.
-- `GITHUB_CLIENT_ID` — OAuth App client ID.
+- `ENAGRAM_GITHUB_CLIENT_ID` — OAuth App client ID.
 - `CLOUDFLARE_DEPLOY_ENABLED` — set to `true` when the configuration above is ready.
 
 Set the OAuth App's callback URL to `APP_URL + /api/auth/github/callback` exactly. Configure the Worker domain/DNS in Cloudflare. When enabled, the action generates a Git-ignored temporary Wrangler config, applies remote D1 migrations, uploads the OAuth secret, and deploys on every push to `main`. The workflow can also be manually triggered from the Actions tab.
