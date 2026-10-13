@@ -1,0 +1,17 @@
+export {};
+declare global {
+ interface EnagramD1Statement {
+  bind(...values: unknown[]): EnagramD1Statement;
+  first<T=Record<string,unknown>>(): Promise<T|null>;
+  all<T=Record<string,unknown>>(): Promise<{results:T[];success:boolean}>;
+  run(): Promise<{success:boolean;meta?:unknown}>;
+ }
+ interface EnagramD1Database { prepare(query:string): EnagramD1Statement; }
+ interface EnagramCloudflareEnv {
+  DB: EnagramD1Database;
+  APP_URL: string;
+  GITHUB_CLIENT_ID: string;
+  GITHUB_CLIENT_SECRET?: string;
+ }
+}
+declare module "cloudflare:workers" { export const env: EnagramCloudflareEnv; }

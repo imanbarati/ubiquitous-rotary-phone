@@ -1,0 +1,9 @@
+import {createFileRoute} from "@tanstack/react-router";
+import {env} from "cloudflare:workers";
+import {validateSoulInput} from "../lib/domain";
+import {currentUser,dbError,json,safeSoul,type SoulRow,sameOrigin} from "../lib/server";
+export const Route=createFileRoute("/api/souls/$id")({server:{handlers:{
+ GET:async({request,params})=>{const e=dbError();if(e)return e;const u=await currentUser(request);if(!u)return json({error:"Sign in required."},401);const r=await env.DB.prepare("SELECT * FROM souls WHERE id=? AND owner_id=?").bind(params.id,u.id).first<SoulRow>();return r?json({soul:safeSoul(r)}):json({error:"Soul not found."},404);},
+ PUT:async({request,params})=>{const e=dbError();if(e)return e;if(!sameOrigin(request))return json({error:"Invalid origin."},403);const u=await currentUser(request);if(!u)return json({error:"Sign in required."},401);let b:unknown;try{b=await request.json();}catch{return json({error:"Invalid JSON."},400);}const v=validateSoulInput(b);if(!v.ok)return json({error:v.error},400);const r=await env.DB.prepare("UPDATE souls SET title=?,description=?,data_json=?,visibility=?,updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=? AND owner_id=?").bind(v.value.title,v.value.description,JSON.stringify(v.value.data),v.value.visibility,params.id,u.id).run();if(!r.success)return json({error:"Could not update Soul."},500);const row=await env.DB.prepare("SELECT * FROM souls WHERE id=? AND owner_id=?").bind(params.id,u.id).first<SoulRow>();return row?json({soul:safeSoul(row)}):json({error:"Soul not found."},404);},
+ DELETE:async({request,params})=>{const e=dbError();if(e)return e;if(!sameOrigin(request))return json({error:"Invalid origin."},403);const u=await currentUser(request);if(!u)return json({error:"Sign in required."},401);const r=await env.DB.prepare("DELETE FROM souls WHERE id=? AND owner_id=?").bind(params.id,u.id).run();return r.success?json({ok:true}):json({error:"Could not delete Soul."},500);}
+}}});
