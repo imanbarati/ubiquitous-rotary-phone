@@ -26,15 +26,14 @@ Needs Node.js 22+.
 
 ## Production D1 and automated deployment
 
-Create the database in a trusted terminal: `npx wrangler login` then `npx wrangler d1 create enagram-platform-db`. Keep the returned database UUID for GitHub Actions.
+The deployment workflow automatically checks for a D1 database named `enagram-platform-db`; it creates the database if missing and reuses it if it already exists. It passes the UUID to later steps for Wrangler config generation, migrations, and deployment. No database UUID secret and no manual database creation are needed.
 
 The CI workflow tests and builds pushes to `main` and pull requests. Production deployment is disabled until the repository variable `CLOUDFLARE_DEPLOY_ENABLED` is set to the exact value `true`.
 
 In GitHub **Settings → Secrets and variables → Actions**, add these repository **secrets**:
 
-- `CLOUDFLARE_API_TOKEN` — least-privilege Cloudflare token with Workers deployment and D1 migration permissions.
+- `CLOUDFLARE_API_TOKEN` — least-privilege Cloudflare token with D1 Write (to list/create the database), Workers deployment, and D1 migration permissions.
 - `CLOUDFLARE_ACCOUNT_ID` — Cloudflare account ID.
-- `CLOUDFLARE_D1_DATABASE_ID` — the UUID from the D1 create command.
 - `GITHUB_CLIENT_SECRET` — OAuth App secret.
 
 Add these repository **variables**:
