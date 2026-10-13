@@ -1,11 +1,11 @@
 import {createFileRoute} from "@tanstack/react-router";
 import {env} from "cloudflare:workers";
-import {appUrl,clearCookie,cookie,getCookie,hashToken,json,randomToken,dbError} from "../lib/server";
+import {clearCookie,cookie,getCookie,hashToken,json,randomToken,dbError} from "../lib/server";
 type GHUser={id:number;login:string;avatar_url?:string};
 export const Route=createFileRoute("/api/auth/github/callback")({server:{handlers:{GET:async({request})=>{
- const u=new URL(request.url),base=appUrl(),h=new Headers({"Cache-Control":"no-store"});h.append("Set-Cookie",clearCookie(request,"enagram_oauth_state"));
+ const u=new URL(request.url),base=u.origin,h=new Headers({"Cache-Control":"no-store"});h.append("Set-Cookie",clearCookie(request,"enagram_oauth_state"));
  const fail=(reason:string)=>{h.set("Location",base?new URL("/?auth="+encodeURIComponent(reason),base).toString():"/");return new Response(null,{status:302,headers:h});};
- if(!base)return json({error:"APP_URL missing."},503);
+
  if(!u.searchParams.get("state")||u.searchParams.get("state")!==getCookie(request,"enagram_oauth_state"))return fail("invalid_state");
  if(u.searchParams.get("error"))return fail("cancelled");
  const code=u.searchParams.get("code");if(!code||!env.ENAGRAM_GITHUB_CLIENT_ID||!env.ENAGRAM_GITHUB_CLIENT_SECRET)return fail("configuration");
