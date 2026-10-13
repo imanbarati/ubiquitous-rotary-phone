@@ -1,5 +1,17 @@
 # Current implementation status — 2026-10-13
 
+## Automatic database provisioning
+
+The GitHub Actions deploy workflow now calls `scripts/ensure-d1.mjs` before Wrangler configuration. It uses the Cloudflare API to find `enagram-platform-db` by name, creates it if missing, and passes the returned UUID to subsequent steps through `GITHUB_ENV`. Repeated deploys reuse the same database. `CLOUDFLARE_D1_DATABASE_ID` is no longer a required GitHub secret.
+
+Required setup remains: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `GITHUB_CLIENT_SECRET`, `APP_URL`, and `GITHUB_CLIENT_ID`, plus `CLOUDFLARE_DEPLOY_ENABLED=true`. The API token must include D1 Write, Workers deployment, and D1 migration permissions.
+
+**Verification note:** this change is committed, but the GitHub Actions runner has not yet been observed completing the job. Do not claim a successful live deployment until Actions confirms it.
+
+---
+
+# Current implementation status — 2026-10-13
+
 The MVP scaffold and workflows have now been committed to this repository. See README.md for setup.
 
 Implemented in the source tree:
