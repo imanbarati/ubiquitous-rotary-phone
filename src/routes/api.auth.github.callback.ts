@@ -1,6 +1,6 @@
 import {createFileRoute} from "@tanstack/react-router";
 import {env} from "cloudflare:workers";
-import {appUrl,clearCookie,cookie,currentUser,getCookie,hashToken,json,randomToken,dbError} from "../lib/server";
+import {appUrl,clearCookie,cookie,getCookie,hashToken,json,randomToken,dbError} from "../lib/server";
 type GHUser={id:number;login:string;avatar_url?:string};
 export const Route=createFileRoute("/api/auth/github/callback")({server:{handlers:{GET:async({request})=>{
  const u=new URL(request.url),base=appUrl(),h=new Headers({"Cache-Control":"no-store"});h.append("Set-Cookie",clearCookie(request,"enagram_oauth_state"));
@@ -8,10 +8,10 @@ export const Route=createFileRoute("/api/auth/github/callback")({server:{handler
  if(!base)return json({error:"APP_URL missing."},503);
  if(!u.searchParams.get("state")||u.searchParams.get("state")!==getCookie(request,"enagram_oauth_state"))return fail("invalid_state");
  if(u.searchParams.get("error"))return fail("cancelled");
- const code=u.searchParams.get("code");if(!code||!env.GITHUB_CLIENT_ID||!env.GITHUB_CLIENT_SECRET)return fail("configuration");
+ const code=u.searchParams.get("code");if(!code||!env.ENAGRAM_GITHUB_CLIENT_ID||!env.ENAGRAM_GITHUB_CLIENT_SECRET)return fail("configuration");
  const err=dbError();if(err)return err;
  try{
-  const tr=await fetch("https://github.com/login/oauth/access_token",{method:"POST",headers:{Accept:"application/json","Content-Type":"application/json"},body:JSON.stringify({client_id:env.GITHUB_CLIENT_ID,client_secret:env.GITHUB_CLIENT_SECRET,code,redirect_uri:new URL("/api/auth/github/callback",base).toString()})});
+  const tr=await fetch("https://github.com/login/oauth/access_token",{method:"POST",headers:{Accept:"application/json","Content-Type":"application/json"},body:JSON.stringify({client_id:env.ENAGRAM_GITHUB_CLIENT_ID,client_secret:env.ENAGRAM_GITHUB_CLIENT_SECRET,code,redirect_uri:new URL("/api/auth/github/callback",base).toString()})});
   if(!tr.ok)return fail("token_exchange");const tp=await tr.json() as {access_token?:string};if(!tp.access_token)return fail("token_exchange");
   const pr=await fetch("https://api.github.com/user",{headers:{Authorization:"Bearer "+tp.access_token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","User-Agent":"enagram-platform"}});
   if(!pr.ok)return fail("profile");const gh=await pr.json() as GHUser;if(!Number.isSafeInteger(gh.id)||typeof gh.login!=="string")return fail("profile");
