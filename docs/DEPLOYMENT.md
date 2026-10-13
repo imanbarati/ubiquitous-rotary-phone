@@ -4,6 +4,13 @@ This is a click-by-click guide for the GitHub Actions deployment. **Never paste 
 
 ## 1. Choose the production URL first
 
+**You do not have to deploy the Worker first.** Cloudflare lets you configure your account's `workers.dev` subdomain before any Worker has been deployed. The app URL can therefore be determined in advance.
+
+1. Open [Cloudflare Dashboard](https://dash.cloudflare.com/).
+2. Select the account you will deploy into, then open **Workers & Pages**.
+3. Find **Your subdomain** and click **Change** (or enable/setup the `workers.dev` subdomain if prompted). Choose an available account subdomain and save it. Cloudflare's [official workers.dev instructions](https://developers.cloudflare.com/workers/configuration/routing/workers-dev/) document this setting.
+4. Your account hostname will be `YOUR-SUBDOMAIN.workers.dev`. The Worker name in this repository's `wrangler.jsonc` is `enagram-platform`, so the app URL will be `https://enagram-platform.YOUR-SUBDOMAIN.workers.dev`.
+
 For a no-custom-domain, Free-tier first deployment, use the Worker's `workers.dev` URL:
 
 ```text
