@@ -15,7 +15,7 @@ Soul content is stored in D1, never in this public source repository. Only hashe
 
 ## Local development
 
-Needs Node.js 22+.
+Needs Node.js 24+ (CI and deployment use Node 24 to avoid a known npm 10 dependency-resolver crash with Vitest 4).
 
 1. Run `npm install`.
 2. Copy `.dev.vars.example` to `.dev.vars` and add the GitHub OAuth App's client secret. PowerShell: `Copy-Item .dev.vars.example .dev.vars`.
